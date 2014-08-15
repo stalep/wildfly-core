@@ -84,6 +84,7 @@ import org.jboss.as.cli.CommandLineCompleter;
 import org.jboss.as.cli.CommandLineException;
 import org.jboss.as.cli.CommandLineRedirection;
 import org.jboss.as.cli.CommandRegistry;
+import org.jboss.as.cli.ConnectionInfo;
 import org.jboss.as.cli.ControllerAddress;
 import org.jboss.as.cli.ControllerAddressResolver;
 import org.jboss.as.cli.OperationCommand;
@@ -878,7 +879,6 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
                 tryConnection(tempClient, address);
                 initNewClient(tempClient, address);
                 connInfoBean.setLoggedSince(new Date());
-                set("connection_info", connInfoBean);
             } catch (RedirectException re) {
                 try {
                     URI location = new URI(re.getLocation());
@@ -1740,5 +1740,9 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
                 throw new CommandLineException("The redirection is not registered any more.");
             }
         }
+    }
+
+    public ConnectionInfo getConnectionInfo() {
+        return connInfoBean;
     }
 }
