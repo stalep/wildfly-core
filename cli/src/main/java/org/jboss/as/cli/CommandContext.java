@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.cli.batch.BatchedCommand;
+import org.jboss.as.cli.connection.CliSSLContext;
 import org.jboss.as.cli.operation.CommandLineParser;
 import org.jboss.as.cli.operation.NodePathFormatter;
 import org.jboss.as.cli.operation.OperationCandidatesProvider;
@@ -234,6 +235,8 @@ public interface CommandContext {
      */
     OperationCandidatesProvider getOperationCandidatesProvider();
 
+    String getPrompt();
+
     /**
      * Returns the history of all the commands and operations.
      * @return  the history of all the commands and operations.
@@ -334,6 +337,8 @@ public interface CommandContext {
      * It requires an initialized at the construction time console.
      */
     void interact();
+
+    void initNewClient(ModelControllerClient newClient, ControllerAddress address);
 
     /**
      * Returns current default filesystem directory.
@@ -458,4 +463,10 @@ public interface CommandContext {
      *  one has already been registered
      */
     void registerRedirection(CommandLineRedirection redirection) throws CommandLineException;
+
+    ControllerAddressResolver getControllerAddressResolver();
+
+    CliSSLContext getCliSSLContext();
+
+    void setCurrentNodePath(OperationRequestAddress address);
 }

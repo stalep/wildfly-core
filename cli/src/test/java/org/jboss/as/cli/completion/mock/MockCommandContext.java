@@ -33,8 +33,10 @@ import org.jboss.as.cli.CommandLineCompleter;
 import org.jboss.as.cli.CommandLineException;
 import org.jboss.as.cli.CommandLineRedirection;
 import org.jboss.as.cli.ControllerAddress;
+import org.jboss.as.cli.ControllerAddressResolver;
 import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.cli.batch.BatchedCommand;
+import org.jboss.as.cli.connection.CliSSLContext;
 import org.jboss.as.cli.operation.CommandLineParser;
 import org.jboss.as.cli.operation.NodePathFormatter;
 import org.jboss.as.cli.operation.OperationCandidatesProvider;
@@ -178,6 +180,11 @@ public class MockCommandContext implements CommandContext {
             operationCandidatesProvider = new DefaultOperationCandidatesProvider();
         }
         return operationCandidatesProvider;
+    }
+
+    @Override
+    public String getPrompt() {
+        return null;
     }
 
     public void setOperationCandidatesProvider(OperationCandidatesProvider provider) {
@@ -334,6 +341,11 @@ public class MockCommandContext implements CommandContext {
     }
 
     @Override
+    public void initNewClient(ModelControllerClient newClient, ControllerAddress address) {
+
+    }
+
+    @Override
     public ModelNode buildRequest(String line) throws CommandFormatException {
         // TODO Auto-generated method stub
         return null;
@@ -400,5 +412,20 @@ public class MockCommandContext implements CommandContext {
     @Override
     public void registerRedirection(CommandLineRedirection redirection) throws CommandLineException {
         throw new CommandLineException("Redirection isn't supported by this impl");
+    }
+
+    @Override
+    public ControllerAddressResolver getControllerAddressResolver() {
+        return null;
+    }
+
+    @Override
+    public CliSSLContext getCliSSLContext() {
+        return null;
+    }
+
+    @Override
+    public void setCurrentNodePath(OperationRequestAddress address) {
+        prefix = address;
     }
 }
