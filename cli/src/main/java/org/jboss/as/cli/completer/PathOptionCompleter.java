@@ -24,8 +24,10 @@ public class PathOptionCompleter implements OptionCompleter<CliCompleterInvocati
         int pos = 0;
         if(cliCompleterInvocation.getGivenCompleteValue() != null)
             pos = cliCompleterInvocation.getGivenCompleteValue().length();
+
         int cursor = OperationRequestCompleter.ARG_VALUE_COMPLETER.complete(cliCompleterInvocation.getCommandContext(),
                 cliCompleterInvocation.getGivenCompleteValue(), pos, candidates);
         cliCompleterInvocation.addAllCompleterValues(candidates);
+        cliCompleterInvocation.setOffset(cliCompleterInvocation.getGivenCompleteValue().length() - cursor);
     }
 }

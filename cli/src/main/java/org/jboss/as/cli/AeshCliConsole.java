@@ -12,6 +12,7 @@ import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.as.cli.command.Cd;
 import org.jboss.as.cli.command.Clear;
@@ -43,7 +44,7 @@ public class AeshCliConsole {
     public AeshCliConsole(CommandContext commandContext) {
         this.commandContext = commandContext;
 
-        setupConsole(null, null);
+        setupConsole(new SettingsBuilder().create());
     }
 
     public void startConsole() {
@@ -55,10 +56,6 @@ public class AeshCliConsole {
                           InputStream consoleInput, OutputStream consoleOutput) {
         this.commandContext = commandContext;
 
-        setupConsole(consoleInput, consoleOutput);
-    }
-
-    private void setupConsole(InputStream consoleInput, OutputStream consoleOutput) {
 
         SettingsBuilder settingsBuilder = new SettingsBuilder();
         if(consoleInput != null)
@@ -71,6 +68,16 @@ public class AeshCliConsole {
                 .readInputrc(false)
                 .enableMan(true);
 
+        setupConsole(settingsBuilder.create());
+    }
+
+    public AeshCliConsole(CommandContext commandContext, Settings settings) {
+        this.commandContext = commandContext;
+        setupConsole(settings);
+    }
+
+    private void setupConsole(Settings settings) {
+
         CommandInvocationServices services = new CommandInvocationServices();
         services.registerProvider(PROVIDER, new CliCommandInvocationProvider(commandContext));
 
@@ -80,7 +87,7 @@ public class AeshCliConsole {
 
         console = new AeshConsoleBuilder()
                 .commandRegistry(commandRegistry)
-                .settings(settingsBuilder.create())
+                .settings(settings)
                 .commandInvocationProvider(services)
                 .completerInvocationProvider(new CliCompleterInvocationProvider(commandContext))
                 .commandNotFoundHandler(new CliCommandNotFound())
