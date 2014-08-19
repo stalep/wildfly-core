@@ -5,6 +5,7 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.parser.Parser;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.cli.Util;
@@ -92,7 +93,6 @@ public class Ls implements Command<CliCommandInvocation> {
             //printList(ctx, names, l.isPresent(parsedCmd));
 
             return;
-
         }
 
         final ModelNode composite = new ModelNode();
@@ -353,9 +353,9 @@ public class Ls implements Command<CliCommandInvocation> {
 
         if(names != null) {
             //printList(ctx, names, l.isPresent(parsedCmd));
-            for(String item : names) {
-                cliCommandInvocation.getShell().out().println(item);
-            }
+            cliCommandInvocation.getShell().out().print(Parser.formatDisplayList(names,
+                    cliCommandInvocation.getShell().getSize().getHeight(),
+                    cliCommandInvocation.getShell().getSize().getWidth()));
             cliCommandInvocation.getShell().out().flush();
         }
 
