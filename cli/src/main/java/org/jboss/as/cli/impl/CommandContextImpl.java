@@ -869,8 +869,6 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
         do {
             try {
                 CallbackHandler cbh = new AuthenticationCallbackHandler(username, password);
-                connInfoBean = new ConnectionInfoBean();
-                connInfoBean.setDisableLocalAuth(disableLocalAuth);
                 if (log.isDebugEnabled()) {
                     log.debug("connecting to " + address.getHost() + ':' + address.getPort() + " as " + username);
                 }
@@ -879,6 +877,8 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
                 retry = false;
                 tryConnection(tempClient, address);
                 initNewClient(tempClient, address);
+                connInfoBean = new ConnectionInfoBean();
+                connInfoBean.setDisableLocalAuth(disableLocalAuth);
                 connInfoBean.setLoggedSince(new Date());
             } catch (RedirectException re) {
                 try {
