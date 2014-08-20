@@ -166,7 +166,7 @@ public class Deploy extends DeploymentHelper implements Command<CliCommandInvoca
         }
     }
 
-    private static class AllServerGroupsValidator implements OptionValidator<CliValidatorInvocationImpl> {
+    private class AllServerGroupsValidator implements OptionValidator<CliValidatorInvocationImpl> {
         @Override
         public void validate(CliValidatorInvocationImpl validatorInvocation) throws OptionValidatorException {
             if(!validatorInvocation.getCommandContext().isDomainMode())
@@ -174,11 +174,18 @@ public class Deploy extends DeploymentHelper implements Command<CliCommandInvoca
         }
     }
 
-    private static class ServerGroupsValidator implements OptionValidator<CliValidatorInvocationImpl> {
+    private class ServerGroupsValidator implements OptionValidator<CliValidatorInvocationImpl> {
         @Override
         public void validate(CliValidatorInvocationImpl validatorInvocation) throws OptionValidatorException {
             if(!validatorInvocation.getCommandContext().isDomainMode())
-                throw new OptionValidatorException("-server-groups option must only be used in domain mode.");
+                throw new OptionValidatorException("--server-groups option must only be used in domain mode.");
+
+            if(name == null)
+                throw new OptionValidatorException("--name must be set when using --server-groups.");
+            if(path == null)
+                throw new OptionValidatorException("--path must be set when using --server-groups.");
+            if(allServerGroups)
+                throw new OptionValidatorException("--all-server-groups can not be set when using --server-groups.");
         }
     }
 

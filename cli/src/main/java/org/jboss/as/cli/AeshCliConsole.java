@@ -20,12 +20,14 @@ import org.jboss.as.cli.command.Connect;
 import org.jboss.as.cli.command.Exit;
 import org.jboss.as.cli.command.Logout;
 import org.jboss.as.cli.command.Ls;
+import org.jboss.as.cli.command.Module;
 import org.jboss.as.cli.command.Quit;
 import org.jboss.as.cli.provider.CliCommandInvocationProvider;
 import org.jboss.as.cli.provider.CliCompleterInvocationProvider;
 import org.jboss.as.cli.provider.CliConverterInvocationProvider;
 import org.jboss.as.cli.provider.CliManProvider;
 import org.jboss.as.cli.provider.CliOptionActivatorProvider;
+import org.jboss.as.cli.provider.CliValidatorInvocationProvider;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -93,7 +95,7 @@ public class AeshCliConsole {
                 .commandNotFoundHandler(new CliCommandNotFound())
                 .converterInvocationProvider(new CliConverterInvocationProvider(commandContext))
                 .optionActivatorProvider(activatorProvider)
-                //.validatorInvocationProvider(new CliValidatorInvocationProvider(commandContext))
+                .validatorInvocationProvider(new CliValidatorInvocationProvider(commandContext))
                 .manProvider(new CliManProvider())
                 .prompt(new Prompt("[disconnected /] "))
                 .create();
@@ -111,6 +113,7 @@ public class AeshCliConsole {
                 .command(Cd.class)
                 .command(Clear.class)
                 .command(Logout.class)
+                .command(Module.class)
                 .create();
     }
 }

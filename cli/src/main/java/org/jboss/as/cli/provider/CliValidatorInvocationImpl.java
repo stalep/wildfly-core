@@ -16,10 +16,15 @@ public class CliValidatorInvocationImpl implements CliValidatorInvocation {
 
     private CommandContext commandContext;
     private Object value;
+    private Object command;
+    private AeshContext aeshContext;
 
-    public CliValidatorInvocationImpl(CommandContext commandContext, Object value) {
+    public CliValidatorInvocationImpl(CommandContext commandContext, Object value,
+                                      AeshContext aeshContext, Object command) {
         this.commandContext = commandContext;
         this.value = value;
+        this.aeshContext = aeshContext;
+        this.command = command;
     }
 
     @Override
@@ -34,11 +39,11 @@ public class CliValidatorInvocationImpl implements CliValidatorInvocation {
 
     @Override
     public Object getCommand() {
-        return null;
+        return command;
     }
 
     @Override
     public AeshContext getAeshContext() {
-        return null;
+        return aeshContext;
     }
 }

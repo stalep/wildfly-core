@@ -24,6 +24,7 @@ public class CliOptionActivatorProvider implements OptionActivatorProvider {
 
     @Override
     public OptionActivator enhanceOptionActivator(OptionActivator optionActivator) {
+
         if(optionActivator instanceof CliOptionActivator)
             ((CliOptionActivator) optionActivator).setCommandContext(commandContext);
 
