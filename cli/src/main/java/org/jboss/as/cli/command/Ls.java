@@ -6,6 +6,7 @@ import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.cli.Util;
@@ -23,9 +24,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @CommandDefinition(name = "ls", description = "list resource node")
 public class Ls implements Command<CliCommandInvocation> {
+
+    private static final Logger LOGGER = LoggerUtil.getLogger(Ls.class.getName());
 
     @Option(name = "list", shortName = 'l', required = false, hasValue = false)
     private boolean list;
@@ -42,7 +47,8 @@ public class Ls implements Command<CliCommandInvocation> {
                 parse(commandInvocation);
             }
             catch (CommandFormatException e) {
-                e.printStackTrace();
+                commandInvocation.getShell().out().println("failed to read node: "+args.get(0).getNodeName());
+                LOGGER.log(Level.INFO, "Failed to read node", e);
             }
 
         return CommandResult.SUCCESS;
@@ -53,8 +59,8 @@ public class Ls implements Command<CliCommandInvocation> {
 
         CommandContext ctx = cliCommandInvocation.getCommandContext();
 
-        final ParsedCommandLine parsedCmd = ctx.getParsedCommandLine();
-        String nodePath = null; //this.nodePath.getValue(parsedCmd);
+        //final ParsedCommandLine parsedCmd = ctx.getParsedCommandLine();
+        //String nodePath = null; //this.nodePath.getValue(parsedCmd);
 
         final OperationRequestAddress address = args.get(0);
         /*

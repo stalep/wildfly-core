@@ -8,6 +8,7 @@ import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.as.cli.completer.PathOptionCompleter;
 import org.jboss.as.cli.converter.OperationRequestAddressConverter;
 import org.jboss.as.cli.operation.OperationRequestAddress;
+import org.jboss.as.cli.validator.ChangeNodeValidator;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,8 +20,8 @@ import java.util.List;
 public class Cd implements Command<CliCommandInvocation> {
 
     @Arguments(completer = PathOptionCompleter.class,
-            converter = OperationRequestAddressConverter.class)
-            //validator = ChangeNodeValidator.class)
+            converter = OperationRequestAddressConverter.class,
+            validator = ChangeNodeValidator.class)
     private List<OperationRequestAddress> arguments;
 
     @Option(hasValue = false)
