@@ -14,7 +14,6 @@ import org.jboss.as.cli.completer.PathOptionCompleter;
 import org.jboss.as.cli.converter.OperationRequestAddressConverter;
 import org.jboss.as.cli.operation.OperationFormatException;
 import org.jboss.as.cli.operation.OperationRequestAddress;
-import org.jboss.as.cli.operation.ParsedCommandLine;
 import org.jboss.as.cli.util.SimpleTable;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
