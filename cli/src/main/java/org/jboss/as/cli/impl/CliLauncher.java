@@ -254,19 +254,7 @@ public class CliLauncher {
             cmdCtx.interact();
         } catch(Throwable t) {
             t.printStackTrace();
-            exitCode = 1;
-        } finally {
-            if(cmdCtx != null) {
-                cmdCtx.terminateSession();
-                if(cmdCtx.getExitCode() != 0) {
-                    exitCode = cmdCtx.getExitCode();
-                }
-            }
-            if (!gui) {
-                System.exit(exitCode);
-            }
         }
-        System.exit(exitCode);
     }
 
     private static CommandContext initCommandContext(String defaultController, String username, char[] password, boolean disableLocalAuth, boolean initConsole, boolean connect, final int connectionTimeout) throws CliInitializationException {

@@ -29,6 +29,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
@@ -64,7 +65,11 @@ import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
 import javax.security.sasl.SaslException;
 
+import org.jboss.aesh.console.AeshConsoleCallback;
+import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.as.cli.CliConfig;
 import org.jboss.as.cli.CliEvent;
 import org.jboss.as.cli.CliEventListener;
@@ -349,20 +354,49 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
     }
 
     protected void initBasicConsole(InputStream consoleInput, OutputStream consoleOutput) throws CliInitializationException {
-        copyConfigSettingsToConsole(consoleInput, consoleOutput);
-        this.console = Console.Factory.getConsole(this);
+        Settings settings = createSettings(consoleInput, consoleOutput);
+        this.console = Console.Factory.getConsole(this, settings);
+        console.setCallback(initCallback());
     }
 
-    private void copyConfigSettingsToConsole(InputStream consoleInput, OutputStream consoleOutput) {
-        if(consoleInput != null)
-            Settings.getInstance().setInputStream(consoleInput);
-        if(consoleOutput != null)
-            Settings.getInstance().setStdOut(consoleOutput);
+    private ConsoleCallback initCallback() {
+        return new AeshConsoleCallback() {
+            @Override
+            public int execute(ConsoleOperation output) throws InterruptedException {
+                if(cmdCompleter == null) {
+                    throw new IllegalStateException("The console hasn't been initialized at construction time.");
+                }
 
-        Settings.getInstance().setHistoryDisabled(!config.isHistoryEnabled());
-        Settings.getInstance().setHistoryFile(new File(config.getHistoryFileDir(), config.getHistoryFileName()));
-        Settings.getInstance().setHistorySize(config.getHistoryMaxSize());
-        Settings.getInstance().setEnablePipelineAndRedirectionParser(false);
+                if(output.getBuffer() == null)
+                    terminateSession();
+                else {
+                    handleSafe(output.getBuffer().trim());
+                    if (client == null && !terminate) {
+                        printLine("You are disconnected at the moment. Type 'connect' to connect to the server or"
+                                + " 'help' for the list of supported commands.");
+                    }
+                    if(!terminate)
+                        console.setPrompt(getPrompt());
+                }
+
+                return 0;
+            }
+        };
+    }
+
+    private Settings createSettings(InputStream consoleInput, OutputStream consoleOutput) {
+        SettingsBuilder builder = new SettingsBuilder();
+        if(consoleInput != null)
+            builder.inputStream(consoleInput);
+        if(consoleOutput != null)
+            builder.outputStream(new PrintStream(consoleOutput));
+
+        builder.disableHistory(!config.isHistoryEnabled())
+                .historyFile(new File(config.getHistoryFileDir(), config.getHistoryFileName()))
+                .historySize(config.getHistoryMaxSize())
+                .parseOperators(false);
+
+        return builder.create();
     }
 
     private void initCommands() {
@@ -676,6 +710,8 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
         if(!terminate) {
             terminate = true;
             disconnectController();
+            if(console != null)
+                console.stop();
             if (shutdownHook != null) {
                 CliShutdownHook.remove(shutdownHook);
             }
@@ -733,22 +769,12 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
             initBasicConsole(null, null);
         }
 
-        boolean useHistory = console.isUseHistory();
-        if (useHistory && disableHistory) {
-            console.setUseHistory(false);
+        if (password) {
+            return console.readLine(prompt, (char) 0x00);
+        } else {
+            return console.readLine(prompt);
         }
-        try {
-            if (password) {
-                return console.readLine(prompt, (char) 0x00);
-            } else {
-                return console.readLine(prompt);
-            }
 
-        } finally {
-            if (disableHistory && useHistory) {
-                console.setUseHistory(true);
-            }
-        }
     }
 
     @Override
@@ -1269,27 +1295,11 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
 
     @Override
     public void interact() {
-        if(cmdCompleter == null) {
-            throw new IllegalStateException("The console hasn't been initialized at construction time.");
-        }
-
-        if (this.client == null) {
+        if(!console.running()) {
+            console.start();
             printLine("You are disconnected at the moment. Type 'connect' to connect to the server or"
                     + " 'help' for the list of supported commands.");
-        }
-
-        try {
-            while (!isTerminated()) {
-                final String line = console.readLine(getPrompt());
-                if (line == null) {
-                    terminateSession();
-                } else {
-                    handleSafe(line.trim());
-                }
-            }
-            printLine("");
-        } catch (Throwable t) {
-            t.printStackTrace();
+            console.setPrompt(getPrompt());
         }
     }
 
