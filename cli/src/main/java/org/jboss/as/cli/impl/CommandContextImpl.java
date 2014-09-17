@@ -85,6 +85,7 @@ import org.jboss.as.cli.CommandLineException;
 import org.jboss.as.cli.CommandLineRedirection;
 import org.jboss.as.cli.CommandRegistry;
 import org.jboss.as.cli.ConnectionInfo;
+import org.jboss.as.cli.CommandSettings;
 import org.jboss.as.cli.ControllerAddress;
 import org.jboss.as.cli.ControllerAddressResolver;
 import org.jboss.as.cli.OperationCommand;
@@ -342,6 +343,35 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
 
         cmdCompleter = new CommandCompleter(cmdRegistry);
         initBasicConsole(consoleInput, consoleOutput);
+        console.addCompleter(cmdCompleter);
+        this.operationCandidatesProvider = new DefaultOperationCandidatesProvider();
+
+        addShutdownHook();
+        CliLauncher.runcom(this);
+    }
+
+
+    CommandContextImpl(CommandSettings commandSettings)
+            throws CliInitializationException {
+
+        config = CliConfigImpl.load(this);
+        addressResolver = ControllerAddressResolver.newInstance(config, commandSettings.getDefaultController());
+
+        operationHandler = new OperationRequestHandler();
+
+        this.username = commandSettings.getUsername();
+        this.password = commandSettings.getPassword().toCharArray();
+        this.disableLocalAuth = commandSettings.isLocalAuthDisabled();
+        this.connectionTimeout = config.getConnectionTimeout();
+
+        resolveParameterValues = config.isResolveParameterValues();
+        silent = config.isSilent();
+        initCommands();
+
+        initSSLContext();
+
+        cmdCompleter = new CommandCompleter(cmdRegistry);
+        initBasicConsole(commandSettings.getInputStream(), commandSettings.getOutputStream());
         console.addCompleter(cmdCompleter);
         this.operationCandidatesProvider = new DefaultOperationCandidatesProvider();
 
