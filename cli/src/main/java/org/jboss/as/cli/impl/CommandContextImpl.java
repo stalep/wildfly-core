@@ -68,6 +68,7 @@ import javax.security.sasl.RealmChoiceCallback;
 import javax.security.sasl.SaslException;
 
 import org.jboss.aesh.console.AeshConsoleCallback;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Process;
@@ -76,6 +77,7 @@ import org.jboss.aesh.console.settings.FileAccessPermission;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.actions.Action;
+import org.jboss.aesh.io.FileResource;
 import org.jboss.as.cli.CliConfig;
 import org.jboss.as.cli.CliEvent;
 import org.jboss.as.cli.CliEventListener;
@@ -453,13 +455,15 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
         if(consoleInput != null) {
             settings.inputStream(consoleInput);
         }
-        settings.outputStream(cliPrintStream);
-
-        settings.enableExport(false);
-
-        settings.disableHistory(!config.isHistoryEnabled());
-        settings.historyFile(new File(config.getHistoryFileDir(), config.getHistoryFileName()));
-        settings.historySize(config.getHistoryMaxSize());
+        settings.outputStream(cliPrintStream)
+                .setExecuteFileAtStart(new
+                        FileResource(Config.getHomeDir()+Config.getPathSeparator()+".jbossclirc"))
+                .persistAlias(false)
+                .aliasFile(new File("no_file"))
+                .enableExport(false)
+                .disableHistory(!config.isHistoryEnabled())
+                .historyFile(new File(config.getHistoryFileDir(), config.getHistoryFileName()))
+                .historySize(config.getHistoryMaxSize());
 
         // Modify Default History File Permissions
         FileAccessPermission permissions = new FileAccessPermission();
