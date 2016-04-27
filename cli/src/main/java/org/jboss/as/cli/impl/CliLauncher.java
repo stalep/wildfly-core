@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
+import org.jboss.as.cli.AeshCliConsole;
 import org.jboss.as.cli.CliInitializationException;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandContextFactory;
@@ -278,11 +279,14 @@ public class CliLauncher {
             // Interactive mode
             ctxBuilder.setInitConsole(true);
             cmdCtx = initCommandContext(ctxBuilder.build(), connect);
-            cmdCtx.interact();
+            //cmdCtx.interact();
+            AeshCliConsole cliConsole = new AeshCliConsole(cmdCtx);
+            cliConsole.startConsole();
         } catch(Throwable t) {
             System.out.println(Util.getMessagesFromThrowable(t));
             exitCode = 1;
         } finally {
+            /*
             if((cmdCtx != null) && !gui) {
                 cmdCtx.terminateSession();
                 if(cmdCtx.getExitCode() != 0) {
@@ -292,8 +296,9 @@ public class CliLauncher {
             if (!gui) {
                 System.exit(exitCode);
             }
+            */
         }
-        System.exit(exitCode);
+        //System.exit(exitCode);
     }
 
     private static CommandContext initCommandContext(CommandContextConfiguration ctxConfig, boolean connect) throws CliInitializationException {

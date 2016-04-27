@@ -208,6 +208,7 @@ public interface Console {
                 }
 
                 private String read(String prompt, Character mask) {
+                    /*
                     int PID = -1;
 
                     try {
@@ -241,6 +242,7 @@ public interface Console {
                             console.putProcessInForeground(PID);
                         }
                     }
+                    */
 
                     // Something is wrong.
                     return null;

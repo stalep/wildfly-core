@@ -27,6 +27,9 @@ import java.util.Collection;
 
 import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.cli.batch.BatchedCommand;
+import org.jboss.as.cli.connection.CliSSLContext;
+import org.jboss.as.cli.impl.CommandContextConfiguration;
+import org.jboss.as.cli.impl.ConnectionInfoBean;
 import org.jboss.as.cli.operation.CommandLineParser;
 import org.jboss.as.cli.operation.NodePathFormatter;
 import org.jboss.as.cli.operation.OperationCandidatesProvider;
@@ -302,11 +305,15 @@ public interface CommandContext {
      */
     OperationCandidatesProvider getOperationCandidatesProvider();
 
+    String getPrompt();
+
     /**
      * Returns the history of all the commands and operations.
      * @return  the history of all the commands and operations.
      */
     CommandHistory getHistory();
+
+    CliConfig getCliConfig();
 
     /**
      * Checks whether the CLI is in the batch mode.
@@ -409,6 +416,8 @@ public interface CommandContext {
      * It requires an initialized at the construction time console.
      */
     void interact();
+
+    void initNewClient(ModelControllerClient newClient, ControllerAddress address, ConnectionInfoBean conInfo);
 
     /**
      * Returns current default filesystem directory.
@@ -523,6 +532,14 @@ public interface CommandContext {
      *          an empty collection if no variables has been defined
      */
     Collection<String> getVariables();
+
+    CliSSLContext getCliSSLContext();
+
+    ControllerAddressResolver getControllerAddressResolver();
+
+    void setCurrentNodePath(OperationRequestAddress address);
+
+    CommandContextConfiguration getContextConfig();
 
     /**
      * After this method returns command line handling will be redirected to

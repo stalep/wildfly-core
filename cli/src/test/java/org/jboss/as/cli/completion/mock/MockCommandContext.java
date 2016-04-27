@@ -38,8 +38,12 @@ import org.jboss.as.cli.CommandLineException;
 import org.jboss.as.cli.CommandLineRedirection;
 import org.jboss.as.cli.ConnectionInfo;
 import org.jboss.as.cli.ControllerAddress;
+import org.jboss.as.cli.ControllerAddressResolver;
 import org.jboss.as.cli.batch.BatchManager;
 import org.jboss.as.cli.batch.BatchedCommand;
+import org.jboss.as.cli.connection.CliSSLContext;
+import org.jboss.as.cli.impl.CommandContextConfiguration;
+import org.jboss.as.cli.impl.ConnectionInfoBean;
 import org.jboss.as.cli.operation.CommandLineParser;
 import org.jboss.as.cli.operation.NodePathFormatter;
 import org.jboss.as.cli.operation.OperationCandidatesProvider;
@@ -212,6 +216,11 @@ public class MockCommandContext implements CommandContext {
         return operationCandidatesProvider;
     }
 
+    @Override
+    public String getPrompt() {
+        return null;
+    }
+
     public void setOperationCandidatesProvider(OperationCandidatesProvider provider) {
         this.operationCandidatesProvider = provider;
     }
@@ -269,6 +278,11 @@ public class MockCommandContext implements CommandContext {
     @Override
     public CommandHistory getHistory() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public CliConfig getCliConfig() {
+        return null;
     }
 
     @Override
@@ -371,6 +385,11 @@ public class MockCommandContext implements CommandContext {
     }
 
     @Override
+    public void initNewClient(ModelControllerClient newClient, ControllerAddress address, ConnectionInfoBean conInfo) {
+
+    }
+
+    @Override
     public ModelNode buildRequest(String line) throws CommandFormatException {
         // TODO Auto-generated method stub
         return null;
@@ -425,6 +444,26 @@ public class MockCommandContext implements CommandContext {
     @Override
     public Collection<String> getVariables() {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public CliSSLContext getCliSSLContext() {
+        return null;
+    }
+
+    @Override
+    public ControllerAddressResolver getControllerAddressResolver() {
+        return null;
+    }
+
+    @Override
+    public void setCurrentNodePath(OperationRequestAddress address) {
+
+    }
+
+    @Override
+    public CommandContextConfiguration getContextConfig() {
         return null;
     }
 
