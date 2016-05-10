@@ -32,6 +32,16 @@ import org.jboss.as.cli.provider.CliValidatorInvocationProvider;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
+import org.jboss.aesh.console.command.container.AeshCommandContainer;
+import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
+import org.jboss.as.cli.command.CommandCommand;
+import org.jboss.as.cli.command.generic.MainCommandParser;
+import org.jboss.as.cli.command.generic.NodeType;
+import org.jboss.as.cli.completer.RolloutPlanCompleter;
+import org.jboss.as.cli.converter.HeadersConverter;
+import org.jboss.as.cli.handlers.jca.JDBCDriverNameProvider;
+import org.jboss.as.cli.impl.DefaultCompleter;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -84,6 +94,46 @@ public class AeshCliConsole {
         services.registerProvider(PROVIDER, new CliCommandInvocationProvider(commandContext));
 
         commandRegistry = createCommandRegistry();
+        MutableCommandRegistry mutableReg = (MutableCommandRegistry) commandRegistry;
+        try {
+            // Add some Generic commands
+            MainCommandParser dataSourceParser = new MainCommandParser("data-source",
+                    new NodeType("/subsystem=datasources/data-source"),
+                    null,
+                    commandContext,
+                    false);
+            final DefaultCompleter driverNameCompleter = new DefaultCompleter(JDBCDriverNameProvider.INSTANCE);
+            dataSourceParser.addCustomCompleter(Util.DRIVER_NAME,
+                    new org.jboss.as.cli.completer.DefaultCompleter(driverNameCompleter));
+            // XXX JFDENISE TODO
+            //dataSourceParser.addCustomSubCommand(new DataSourceAddCompositeSubCommand(Util.ADD,
+            //        new NodeType("/subsystem=datasources/data-source"), null));
+            mutableReg.addCommand(new AeshCommandContainer(dataSourceParser));
+
+            MainCommandParser xdataSourceParser = new MainCommandParser("xa-data-source",
+                    new NodeType("/subsystem=datasources/xa-data-source"),
+                    null,
+                    commandContext,
+                    false);
+            xdataSourceParser.addCustomCompleter(Util.DRIVER_NAME,
+                    new org.jboss.as.cli.completer.DefaultCompleter(driverNameCompleter));
+            // XXX JFDENISE TODO
+            //dataSourceParser.addCustomSubCommand(new XADataSourceAddCompositeSubCommand(Util.ADD,
+            //        new NodeType("/subsystem=datasources/data-source"), null));
+            mutableReg.addCommand(new AeshCommandContainer(xdataSourceParser));
+
+            MainCommandParser rolloutParser = new MainCommandParser("rollout-plan",
+                    new NodeType("/management-client-content=rollout-plans/rollout-plan"),
+                    null,
+                    commandContext,
+                    false);
+            rolloutParser.addCustomConverter("content", HeadersConverter.INSTANCE);
+            rolloutParser.addCustomCompleter("content", RolloutPlanCompleter.INSTANCE);
+            mutableReg.addCommand(new AeshCommandContainer(rolloutParser));
+
+        } catch (CommandLineParserException ex) {
+            throw new RuntimeException(ex);
+        }
 
         CliOptionActivatorProvider activatorProvider = new CliOptionActivatorProvider(commandContext);
 
@@ -91,7 +141,7 @@ public class AeshCliConsole {
                 .commandRegistry(commandRegistry)
                 .settings(settings)
                 .commandInvocationProvider(services)
-                .completerInvocationProvider(new CliCompleterInvocationProvider(commandContext))
+                .completerInvocationProvider(new CliCompleterInvocationProvider(commandContext, commandRegistry))
                 .commandNotFoundHandler(new CliCommandNotFound())
                 .converterInvocationProvider(new CliConverterInvocationProvider(commandContext))
                 .optionActivatorProvider(activatorProvider)
@@ -107,6 +157,7 @@ public class AeshCliConsole {
     private CommandRegistry createCommandRegistry() {
         return new AeshCommandRegistryBuilder()
                 .command(Quit.class)
+                .command(CommandCommand.class)
                 .command(Exit.class)
                 .command(Ls.class)
                 .command(Connect.class)

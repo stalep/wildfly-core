@@ -43,12 +43,12 @@ public class HeadersCompleter implements CommandLineCompleter {
 
         // if this is value completion of --headers, the parser trims values, so last spaces will be removed
         // which is not good here
-        final String originalBuffer = ctx.getParsedCommandLine().getOriginalLine();
-        int valueIndex = originalBuffer.lastIndexOf(buffer);
-        if(valueIndex == -1) {
-            return -1;
-        }
-        buffer = originalBuffer.substring(valueIndex);
+//        final String originalBuffer = ctx.getParsedCommandLine().getOriginalLine();
+//        int valueIndex = originalBuffer.lastIndexOf(buffer);
+//        if(valueIndex == -1) {
+//            return -1;
+//        }
+//        buffer = originalBuffer.substring(valueIndex);
         try {
             handler.parseOperation(null, buffer);
         } catch (CommandFormatException e) {

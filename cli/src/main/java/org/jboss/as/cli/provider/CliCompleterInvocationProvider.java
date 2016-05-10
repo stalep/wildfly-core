@@ -8,6 +8,7 @@ package org.jboss.as.cli.provider;
 
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.as.cli.CommandContext;
 
 /**
@@ -15,14 +16,17 @@ import org.jboss.as.cli.CommandContext;
  */
 public class CliCompleterInvocationProvider implements CompleterInvocationProvider<CliCompleterInvocation> {
 
-    private CommandContext ctx;
+    private final CommandContext ctx;
+    private final CommandRegistry registry;
 
-    public CliCompleterInvocationProvider(CommandContext ctx) {
+    public CliCompleterInvocationProvider(CommandContext ctx,
+            CommandRegistry registry) {
         this.ctx = ctx;
+        this.registry = registry;
     }
 
     @Override
     public CliCompleterInvocation enhanceCompleterInvocation(CompleterInvocation completerInvocation) {
-        return new CliCompleterInvocation(completerInvocation, ctx);
+        return new CliCompleterInvocation(completerInvocation, ctx, registry);
     }
 }

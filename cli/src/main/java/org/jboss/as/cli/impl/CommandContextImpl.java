@@ -1191,7 +1191,8 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
 
     @Override
     public int getTerminalWidth() {
-        if(console == null) {
+        if (console == null) {
+            return 80;
             /*
             try {
                 this.initBasicConsole(null, null);
@@ -1206,7 +1207,8 @@ class CommandContextImpl implements CommandContext, ModelControllerClientFactory
 
     @Override
     public int getTerminalHeight() {
-        if(console == null) {
+        if (console == null) {
+            return 24;
             /*
             try {
                 this.initBasicConsole(null, null);

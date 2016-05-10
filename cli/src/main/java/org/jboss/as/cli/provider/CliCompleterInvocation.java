@@ -6,6 +6,7 @@
  */
 package org.jboss.as.cli.provider;
 
+import java.util.Collection;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
@@ -13,19 +14,26 @@ import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.as.cli.CommandContext;
 
 import java.util.List;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class CliCompleterInvocation implements CompleterInvocation {
 
-    private CompleterInvocation delegate;
+    private final CompleterInvocation delegate;
+    private final CommandContext commandContext;
+    private final CommandRegistry registry;
 
-    private CommandContext commandContext;
-
-    public CliCompleterInvocation(CompleterInvocation delegate, CommandContext ctx) {
+    public CliCompleterInvocation(CompleterInvocation delegate, CommandContext ctx,
+            CommandRegistry registry) {
         this.delegate = delegate;
         this.commandContext = ctx;
+        this.registry = registry;
+    }
+
+    public CommandRegistry getCommandRegistry() {
+        return registry;
     }
 
     @Override
@@ -44,11 +52,6 @@ public class CliCompleterInvocation implements CompleterInvocation {
     }
 
     @Override
-    public void setCompleterValues(List<String> strings) {
-        delegate.setCompleterValues(strings);
-    }
-
-    @Override
     public void setCompleterValuesTerminalString(List<TerminalString> terminalStrings) {
         delegate.setCompleterValuesTerminalString(terminalStrings);
     }
@@ -56,11 +59,6 @@ public class CliCompleterInvocation implements CompleterInvocation {
     @Override
     public void clearCompleterValues() {
         delegate.clearCompleterValues();
-    }
-
-    @Override
-    public void addAllCompleterValues(List<String> strings) {
-        delegate.addAllCompleterValues(strings);
     }
 
     @Override
@@ -120,5 +118,15 @@ public class CliCompleterInvocation implements CompleterInvocation {
 
     public CommandContext getCommandContext() {
         return commandContext;
+    }
+
+    @Override
+    public void setCompleterValues(Collection<String> completerValues) {
+        delegate.setCompleterValues(completerValues);
+    }
+
+    @Override
+    public void addAllCompleterValues(Collection<String> completerValues) {
+        delegate.addAllCompleterValues(completerValues);
     }
 }

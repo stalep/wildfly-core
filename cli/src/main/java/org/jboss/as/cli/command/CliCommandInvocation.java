@@ -131,4 +131,19 @@ public class CliCommandInvocation implements CommandInvocation {
         commandInvocation.setPrompt(new Prompt(builder.toString()));
     }
 
+    @Override
+    public String getInputLine() throws InterruptedException {
+        return commandInvocation.getInputLine();
+    }
+
+    @Override
+    public void print(String msg) {
+        commandInvocation.print(msg);
+    }
+
+    @Override
+    public void println(String msg) {
+        commandInvocation.println(msg);
+    }
+
 }
