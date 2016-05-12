@@ -32,11 +32,13 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.parser.OptionParserException;
+import org.jboss.aesh.console.command.map.MapCommand;
 import org.jboss.aesh.console.command.map.MapProcessedCommandBuilder;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.cli.CommandLineException;
 import org.jboss.as.cli.command.activator.ExpectedOptionsActivator;
+import org.jboss.as.cli.command.activator.HiddenActivator;
 import org.jboss.as.cli.completer.BooleanCompleter;
 import org.jboss.as.cli.converter.DefaultValueConverter;
 import org.jboss.as.cli.converter.ListConverter;
@@ -60,14 +62,16 @@ class WriteAttributesSubCommand extends AbstractOperationSubCommand {
     private final List<ProcessedOption> commonOptions;
     private final Map<String, OptionCompleter<CliCompleterInvocation>> customCompleters;
     private final Map<String, Converter<ModelNode, CliConverterInvocation>> customConverters;
+    private final boolean hidden;
     WriteAttributesSubCommand(NodeType nodeType, String propertyId,
             List<ProcessedOption> commonOptions,
             Map<String, OptionCompleter<CliCompleterInvocation>> customCompleters,
-            Map<String, Converter<ModelNode, CliConverterInvocation>> customConverters) {
+            Map<String, Converter<ModelNode, CliConverterInvocation>> customConverters, boolean hidden) {
         super("write-attributes", nodeType, propertyId);
         this.commonOptions = commonOptions;
         this.customCompleters = customCompleters;
         this.customConverters = customConverters;
+        this.hidden = hidden;
     }
 
     @Override
@@ -127,7 +131,7 @@ class WriteAttributesSubCommand extends AbstractOperationSubCommand {
     }
 
     @Override
-    public ProcessedCommand getProcessedCommand(final CommandContext commandContext) throws CommandLineParserException {
+    public ProcessedCommand<MapCommand> getProcessedCommand(final CommandContext commandContext) throws CommandLineParserException {
         return new MapProcessedCommandBuilder().
                 name(getOperationName()).
                 addOptions(commonOptions).
@@ -136,6 +140,9 @@ class WriteAttributesSubCommand extends AbstractOperationSubCommand {
                     @Override
                     public List<ProcessedOption> getOptions() {
                         final List<ProcessedOption> allOptions = new ArrayList<>();
+                        if (commandContext.getModelControllerClient() == null) {
+                            return allOptions;
+                        }
                         try {
                             Iterator<GenericTypeOperationHandler.AttributeDescription> props
                                     = org.jboss.as.cli.command.generic.Util.getAttributeDescriptions(commandContext, getNodeType());
@@ -172,14 +179,14 @@ class WriteAttributesSubCommand extends AbstractOperationSubCommand {
                                     }
                                     if (valueCompleter == null) {
                                         allOptions.add(new ProcessedOptionBuilder().
-                                                activator(new ExpectedOptionsActivator(getPropertyId())).
+                                                activator(new HiddenActivator(hidden, new ExpectedOptionsActivator(getPropertyId()))).
                                                 name(prop.getName()).
                                                 converter(valueConverter).
                                                 type(ModelNode.class).
                                                 create());
                                     } else {
                                         allOptions.add(new ProcessedOptionBuilder().
-                                                activator(new ExpectedOptionsActivator(getPropertyId())).
+                                                activator(new HiddenActivator(hidden, new ExpectedOptionsActivator(getPropertyId()))).
                                                 completer(valueCompleter).
                                                 name(prop.getName()).
                                                 converter(valueConverter).

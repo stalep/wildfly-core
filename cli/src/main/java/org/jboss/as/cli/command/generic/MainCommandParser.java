@@ -40,6 +40,7 @@ import org.jboss.aesh.console.command.map.MapCommand;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.command.activator.ExpectedOptionsActivator;
 import org.jboss.as.cli.command.activator.NotExpectedOptionsActivator;
+import org.jboss.as.cli.command.generic.MainCommand.MainCommandProcessedCommand;
 import org.jboss.as.cli.completer.ChildrenNameCompleter;
 import org.jboss.as.cli.completer.HeadersCompleter;
 import org.jboss.as.cli.completer.InstanceCompleter;
@@ -77,12 +78,19 @@ public class MainCommandParser extends AeshCommandLineParser<MapCommand> {
 
     public MainCommandParser(String name, NodeType nodeType, String propertyId,
             CommandContext commandContext, boolean removable) throws CommandLineParserException {
-        super(new MainCommand(name, nodeType, propertyId, EXCLUDED_OPERATIONS).
+        super(new MainCommand(name, nodeType, propertyId == null ? "name" : propertyId, EXCLUDED_OPERATIONS).
                 getProcessedCommand(commandContext));
         this.nodeType = nodeType;
         this.propertyId = propertyId == null ? "name" : propertyId;
         this.commandContext = commandContext;
         this.removable = removable;
+        // START BACKWARD COMPATIBILITY
+        // This is done to allow for backward compatibility, this code should be
+        // removed at some point
+        MainCommandProcessedCommand c = (MainCommandProcessedCommand) getProcessedCommand();
+        c.getMainCommand().customCompleters = customCompleters;
+        c.getMainCommand().customConverters = customConverters;
+        // END BACKWARD COMPATIBILITY
     }
 
     public boolean isRemovable() {
@@ -127,7 +135,7 @@ public class MainCommandParser extends AeshCommandLineParser<MapCommand> {
             AeshCommandLineParser<?> parser
                     = new AeshCommandLineParser<>(new WriteAttributesSubCommand(nodeType,
                             propertyId,
-                            commonOptions, customCompleters, customConverters).
+                            commonOptions, customCompleters, customConverters, false).
                             getProcessedCommand(commandContext));
             parser.setChild(true);
             lst.add(parser);

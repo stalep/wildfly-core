@@ -22,22 +22,39 @@
 package org.jboss.as.cli.command.generic;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import org.jboss.aesh.cl.activation.OptionActivator;
+import org.jboss.aesh.cl.completer.OptionCompleter;
+import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
+import org.jboss.aesh.cl.parser.OptionParserException;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.map.MapCommand;
 import org.jboss.aesh.console.command.map.MapProcessedCommandBuilder;
+import org.jboss.aesh.console.command.map.MapProcessedCommandBuilder.ProcessedOptionProvider;
 import org.jboss.as.cli.CommandContext;
 import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.cli.CommandLineException;
 import org.jboss.as.cli.command.CliCommandInvocation;
+import org.jboss.as.cli.command.activator.ExpectedOptionsActivator;
+import org.jboss.as.cli.command.activator.HiddenActivator;
+import org.jboss.as.cli.command.activator.NotExpectedOptionsActivator;
 import org.jboss.as.cli.command.activator.PresenceOptionsActivatorBuilder;
+import org.jboss.as.cli.completer.HeadersCompleter;
+import org.jboss.as.cli.completer.InstanceCompleter;
+import org.jboss.as.cli.converter.HeadersConverter;
+import org.jboss.as.cli.provider.CliCompleterInvocation;
+import org.jboss.as.cli.provider.CliConverterInvocation;
 import org.jboss.dmr.ModelNode;
 
 /**
@@ -45,6 +62,36 @@ import org.jboss.dmr.ModelNode;
  * @author jfdenise
  */
 class MainCommand extends MapCommand<CliCommandInvocation> {
+
+    // START BACKWARD
+    // This is for backward compatibility.
+    // No operation means WriteAttributes
+    // This code should be removed at some point.
+    class MainCommandProcessedCommand extends ProcessedCommand<MapCommand> {
+
+        private ProcessedCommand<MapCommand> p;
+
+        public MainCommandProcessedCommand(ProcessedCommand<MapCommand> p) throws OptionParserException {
+            super(p.getName(), p.getCommand(), p.getDescription(), p.getValidator(),
+                    p.getResultHandler(),
+                    p.getArgument(), Collections.<ProcessedOption>emptyList(), p.getCommandPopulator());
+            this.p = p;
+        }
+
+        @Override
+        public List<ProcessedOption> getOptions() {
+            return p == null ? Collections.<ProcessedOption>emptyList() : p.getOptions();
+        }
+
+        MainCommand getMainCommand() {
+            return MainCommand.this;
+        }
+
+    }
+    public Map<String, OptionCompleter<CliCompleterInvocation>> customCompleters;
+    public Map<String, Converter<ModelNode, CliConverterInvocation>> customConverters;
+    private WriteAttributesSubCommand subCommand;
+    //END BACKWARD COMPATIBILITY
 
     private final NodeType nodeType;
     private final String propertyId;
@@ -66,6 +113,22 @@ class MainCommand extends MapCommand<CliCommandInvocation> {
             } catch (CommandLineException ex) {
                 throw new RuntimeException(ex);
             }
+            return null;
+        }
+        // This is the backward behavior, Please remove me.
+        if (contains(propertyId)) {
+            WriteAttributesSubCommand cmd = getWriteAttributesSubCommand(commandInvocation.getCommandContext());
+            Set<String> keys = new HashSet<>();
+            for (String opt : cmd.getValues().keySet()) {
+                keys.add(opt);
+            }
+            for (String k : keys) {
+                cmd.resetValue(k);
+            }
+            for (Entry<String, Object> entry : getValues().entrySet()) {
+                cmd.setValue(entry.getKey(), entry.getValue());
+            }
+            return cmd.execute(commandInvocation);
         }
         return null;
     }
@@ -211,8 +274,24 @@ class MainCommand extends MapCommand<CliCommandInvocation> {
     }
 
     public ProcessedCommand getProcessedCommand(final CommandContext commandContext) throws CommandLineParserException {
-        return new MapProcessedCommandBuilder().
+        // This is for backward compatibility.
+        // No operation means WriteAttributes
+        // This code should be removed at some point.
+        ProcessedOptionProvider provider = new ProcessedOptionProvider() {
+            @Override
+            public List<ProcessedOption> getOptions() {
+                try {
+                    return getWriteAttributesSubCommand(commandContext).
+                            getProcessedCommand(commandContext).getOptions();
+                } catch (CommandLineParserException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        };
+
+        ProcessedCommand p = new MapProcessedCommandBuilder().
                 name(commandName).
+                optionProvider(provider).
                 addOption(new ProcessedOptionBuilder().name("help").
                         hasValue(false).
                         type(String.class).
@@ -233,6 +312,60 @@ class MainCommand extends MapCommand<CliCommandInvocation> {
                                 expected("help").
                                 notExpected("properties").create()).create()).
                 command(this).create();
+
+        // This is for backward compatibility.
+        // No operation means WriteAttributes
+        // This code should be removed at some point.
+        MainCommandProcessedCommand main = new MainCommandProcessedCommand(p);
+        return main;
+    }
+
+    private WriteAttributesSubCommand getWriteAttributesSubCommand(final CommandContext commandContext) {
+        if (subCommand == null) {
+            List<ProcessedOption> commonOptions = new ArrayList<>();
+
+            // instance identifier option
+            OptionActivator instanceActivator = new OptionActivator() {
+                @Override
+                public boolean isActivated(ProcessedCommand processedCommand) {
+                    if ((nodeType.dependsOnProfile()
+                            || commandContext.isDomainMode())
+                            && processedCommand.findLongOption("profile") == null) {
+                        return false;
+                    }
+                    return new NotExpectedOptionsActivator("help").isActivated(processedCommand);
+                }
+
+            };
+
+            try {
+                commonOptions.add(new ProcessedOptionBuilder().name(propertyId).
+                        completer(new InstanceCompleter(nodeType)).
+                        type(String.class).
+                        activator(new HiddenActivator(true, instanceActivator)).
+                        create());
+
+                commonOptions.add(new ProcessedOptionBuilder().name("headers").
+                        completer(new HeadersCompleter()).
+                        type(String.class).
+                        converter(HeadersConverter.INSTANCE).
+                        activator(new HiddenActivator(true, new ExpectedOptionsActivator(propertyId))).
+                        create());
+
+                WriteAttributesSubCommand subCommand
+                        = new WriteAttributesSubCommand(nodeType,
+                                propertyId,
+                                commonOptions,
+                                customCompleters,
+                                customConverters,
+                                true);
+                this.subCommand = subCommand;
+            } catch (Exception ex) {
+                // XXX JFDENISE, REVIEW EXCEPTION HANDLING
+                throw new RuntimeException(ex);
+            }
+        }
+        return subCommand;
     }
 
     private void printSupportedCommands(CommandContext ctx) throws CommandLineException {
